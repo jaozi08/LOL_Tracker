@@ -122,7 +122,7 @@ def export_all_ics(events, base_dir):
 
 
 if __name__ == "__main__":
-    target_folder = os.path.expanduser("~/Downloads")
+    target_folder = "."
     events = fetch_lck_events()
     print(f"Successfully fetched {len(events)} games, creating ics files...")
     export_all_ics(events, base_dir=target_folder)
