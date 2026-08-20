@@ -6,7 +6,8 @@ on:
   workflow_dispatch: 
 
 jobs:
-  LCK-Publisher:
+  lol-tracker:
+    name: "LOL Tracker" 
     runs-on: ubuntu-latest
     permissions:
       contents: write 
@@ -23,9 +24,12 @@ jobs:
       - name: Run LCK Scraper
         run: python LCK.py
 
+      - name: Run LPL Scraper
+        run: python LPL.py
+
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --staged --quiet || (git commit -m "Auto update LCK calendar [$(date +'%Y-%m-%d %H:%M')]" && git push)
+          git diff --staged --quiet || (git commit -m "Auto update LOL calendar [$(date +'%Y-%m-%d %H:%M')]" && git push)
