@@ -4,7 +4,7 @@ import json
 import urllib.request
 from datetime import datetime, timedelta
 
-def fetch_lck_events():
+def fetch_lpl_events():
     url = "https://lolesports.com/en-US/leagues/lpl"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
     req = urllib.request.Request(url, headers=headers)
@@ -60,7 +60,7 @@ def format_event_to_ics(ev, has_alarm=False):
         title += f" - {w1} : {w2}"
 
     description = f"LPL {ev.get('tournament', {}).get('name', '')} {ev.get('blockName', '')}"
-    uid = f"lck-{ev.get('id')}@lolesports.com"
+    uid = f"lpl-{ev.get('id')}@lolesports.com"
 
     alarm_str = ""
     if has_alarm and ev.get("state") == "unstarted":
@@ -87,8 +87,8 @@ def format_event_to_ics(ev, has_alarm=False):
 
 
 def export_all_ics(events, base_dir):
-    lck_dir = os.path.join(base_dir, "2026_lpl")
-    team_dir = os.path.join(lck_dir, "team")
+    lpl_dir = os.path.join(base_dir, "2026_lpl")
+    team_dir = os.path.join(lpl_dir, "team")
     os.makedirs(team_dir, exist_ok=True)
     
     team_events_map = {}
@@ -113,8 +113,8 @@ def export_all_ics(events, base_dir):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(content))
 
-    save_ics(os.path.join(lck_dir, "2026_lck.ics"), events, "LPL 2026 schedule", False)
-    save_ics(os.path.join(lck_dir, "2026_lck-alarm.ics"), events, "LPL 2026 schedule(w/ alarm)", True)
+    save_ics(os.path.join(lpl_dir, "2026_lpl.ics"), events, "LPL 2026 schedule", False)
+    save_ics(os.path.join(lpl_dir, "2026_lpl-alarm.ics"), events, "LPL 2026 schedule(w/ alarm)", True)
     
     for team_code, t_events in team_events_map.items():
         save_ics(os.path.join(team_dir, f"{team_code}.ics"), t_events, f"LPL {team_code} schedule", False)
@@ -123,7 +123,7 @@ def export_all_ics(events, base_dir):
 
 if __name__ == "__main__":
     target_folder = "."
-    events = fetch_lck_events()
+    events = fetch_lpl_events()
     print(f"Successfully fetched {len(events)} games, creating ics files...")
     export_all_ics(events, base_dir=target_folder)
     print(f"Done! ics files created in: {os.path.join(target_folder, '2026_lpl')}")
