@@ -1,0 +1,31 @@
+name: LOL Tracker
+
+on:
+  schedule:
+    - cron: "0 16 * * *"
+  workflow_dispatch: 
+
+jobs:
+  LCK-Publisher:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write 
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run LCK Scraper
+        run: python LCK.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || (git commit -m "Auto update LCK calendar [$(date +'%Y-%m-%d %H:%M')]" && git push)
