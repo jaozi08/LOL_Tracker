@@ -87,7 +87,7 @@ def format_event_to_ics(ev, has_alarm=False):
 
 
 def export_all_ics(events, base_dir):
-    lpl_dir = os.path.join(base_dir, "2026_lpl")
+    lpl_dir = os.path.join(base_dir, "lpl")
     team_dir = os.path.join(lpl_dir, "team")
     os.makedirs(team_dir, exist_ok=True)
     
@@ -113,8 +113,8 @@ def export_all_ics(events, base_dir):
         with open(filepath, "w", encoding="utf-8") as f:
             f.write("\n".join(content))
 
-    save_ics(os.path.join(lpl_dir, "2026_lpl.ics"), events, "LPL 2026 schedule", False)
-    save_ics(os.path.join(lpl_dir, "2026_lpl-alarm.ics"), events, "LPL 2026 schedule(w/ alarm)", True)
+    save_ics(os.path.join(lpl_dir, "lpl.ics"), events, "LPL schedule", False)
+    save_ics(os.path.join(lpl_dir, "lpl-alarm.ics"), events, "LPL schedule(w/ alarm)", True)
     
     for team_code, t_events in team_events_map.items():
         save_ics(os.path.join(team_dir, f"{team_code}.ics"), t_events, f"LPL {team_code} schedule", False)
@@ -126,4 +126,4 @@ if __name__ == "__main__":
     events = fetch_lpl_events()
     print(f"Successfully fetched {len(events)} games, creating ics files...")
     export_all_ics(events, base_dir=target_folder)
-    print(f"Done! ics files created in: {os.path.join(target_folder, '2026_lpl')}")
+    print(f"Done! ics files created in: {os.path.join(target_folder, 'lpl')}")
