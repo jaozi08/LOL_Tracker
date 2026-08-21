@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOL Tracker - 赛程日历订阅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #00050c;
+            --bg-card: rgba(20, 26, 40, 0.75);
+            --bg-card-hover: rgba(28, 36, 56, 0.9);
+            --accent-lck: #00e5ff;
+            --accent-lck-glow: rgba(0, 210, 255, 0.25);
+            --accent-lpl: #ff4757;
+            --accent-lpl-glow: rgba(247, 62, 77, 0.403);
+            --text-main: #c9ebff;
+            --text-muted: #6d7a88;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --code-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 1.5rem 1.5rem 4rem;
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 210, 255, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255, 71, 87, 0.08), transparent);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            padding: 0.25rem 0.35rem;
+            backdrop-filter: blur(12px);
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .lang-btn:hover {
+            color: var(--text-main);
+        }
+
+        .lang-btn.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        h1 {
+            font-size: clamp(2.2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(90deg, #3ca5d6 0%, #e8f7ff 50%, #3ca5d6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.8rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.8rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--border-hover);
+            color: var(--text-main);
+        }
+
+        .tab-btn.active-lck {
+            background: rgba(0, 210, 255, 0.1);
+            border-color: var(--accent-lck);
+            color: var(--accent-lck);
+            box-shadow: 0 0 20px var(--accent-lck-glow);
+        }
+
+        .tab-btn.active-lpl {
+            background: rgba(255, 71, 87, 0.1);
+            border-color: var(--accent-lpl);
+            color: var(--accent-lpl);
+            box-shadow: 0 0 20px var(--accent-lpl-glow);
+        }
+
+        .section-panel {
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .section-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .featured-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(16px);
+            transition: all 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.2rem;
+            line-height: 1.5;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: #c9ebff;
+            color: #030f1e;
+        }
+
+        .btn-primary:hover {
+            background: #d6f1ff;
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--border-hover);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .team-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.1rem;
+            backdrop-filter: blur(12px);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .team-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .team-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .team-code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            padding: 0.2rem 0.5rem;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+        }
+
+        .team-name {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #5cb396;
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        footer {
+            margin-top: 5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            padding-top: 2rem;
+        }
+
+        footer a {
+            color: var(--text-main);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Lang Button -->
+    <div class="top-nav">
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLanguage('zh')">中文</button>
+            <button class="lang-btn" onclick="setLanguage('en')">English</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="badge">
+            <span class="badge-dot"></span>
+            <span data-i18n="badge">GitHub Actions 每日全自动同步更新</span>
+        </div>
+        <h1 data-i18n="title">LOL赛程日历</h1>
+        <p class="subtitle" data-i18n="subtitle">英雄联盟赛程和比分日历订阅，一键添加至 Apple Calendar。</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active-lck" onclick="switchTab('lck')">
+            <span data-i18n="tab_lck">LCK 职业联赛</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('lpl')">
+            <span data-i18n="tab_lpl">LPL 职业联赛</span>
+        </button>
+    </div>
+
+    <!-- LCK -->
+    <div id="lck-panel" class="section-panel active">
+        <div class="featured-grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title" data-i18n="lck_full_title">LCK 赛程</div>
+                    </div>
+                    <div class="card-desc" data-i18n="lck_full_desc">包含 LCK 所有常规赛和季后赛的赛程与比分。</div>
+                </div>
+                <div class="btn-group">
+                    <a href="webcal://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lck/lck.ics" class="btn btn-primary" data-i18n="btn_sub">订阅日历</a>
+                    <button class="btn btn-secondary" onclick="copyLink('https://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lck/lck.ics')" data-i18n="btn_copy">复制链接</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title" data-i18n="lck_alarm_title">LCK 赛程 (含提醒)</div>
+                    </div>
+                    <div class="card-desc" data-i18n="lck_alarm_desc">LCK 每场比赛开始前 30 分钟发送系统通知。</div>
+                </div>
+                <div class="btn-group">
+                    <a href="webcal://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lck/lck-alarm.ics" class="btn btn-primary" data-i18n="btn_sub">订阅日历</a>
+                    <button class="btn btn-secondary" onclick="copyLink('https://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lck/lck-alarm.ics')" data-i18n="btn_copy">复制链接</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title" data-i18n="team_section">战队赛程</div>
+        <div class="team-grid" id="lck-teams"></div>
+    </div>
+
+     <!-- LPL -->
+    <div id="lpl-panel" class="section-panel">
+        <div class="featured-grid">
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title" data-i18n="lpl_full_title">LPL 赛程</div>
+                    </div>
+                    <div class="card-desc" data-i18n="lpl_full_desc">包含 LPL 所有登峰组/涅槃组和季后赛的比分与赛程。</div>
+                </div>
+                <div class="btn-group">
+                    <a href="webcal://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lpl/lpl.ics" class="btn btn-primary" data-i18n="btn_sub">订阅日历</a>
+                    <button class="btn btn-secondary" onclick="copyLink('https://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lpl/lpl.ics')" data-i18n="btn_copy">复制链接</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-header">
+                        <div class="card-title" data-i18n="lpl_alarm_title">LPL 赛程 (含提醒)</div>
+                    </div>
+                    <div class="card-desc" data-i18n="lpl_alarm_desc">LPL 每场比赛开始前 30 分钟发送系统通知。</div>
+                </div>
+                <div class="btn-group">
+                    <a href="webcal://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lpl/lpl-alarm.ics" class="btn btn-primary" data-i18n="btn_sub">订阅日历</a>
+                    <button class="btn btn-secondary" onclick="copyLink('https://cdn.jsdelivr.net/gh/jaozi08/LOL_Tracker/lpl/lpl-alarm.ics')" data-i18n="btn_copy">复制链接</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title" data-i18n="team_section">战队赛程</div>
+        <div class="team-grid" id="lpl-teams"></div>
+    </div>
+
+    <footer>
+        <p><span data-i18n="footer_src">数据来源于 Riot Games 官方赛事平台</span> · <span data-i18n="footer_host">托管于</span> <a href="https://github.com/jaozi08/LOL_Tracker" target="_blank">jaozi08/LOL_Tracker</a></p>
+    </footer>
+</div>
+
+<div id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toast-text" data-i18n="toast">已复制订阅链接到剪贴板！</span>
+</div>
+
+<script>
+    const USERNAME = "jaozi08";
+    const REPO = "LOL_Tracker";
+    let currentLang = "zh";
+
+    const I18N = {
+        zh: {
+            badge: "GitHub Actions 每日全自动同步更新",
+            title: "LOL赛程日历",
+            subtitle: "英雄联盟赛程和比分日历订阅，一键添加至 Apple Calendar。",
+            tab_lck: "LCK 职业联赛",
+            tab_lpl: "LPL 职业联赛",
+            lck_full_title: "LCK 赛程",
+            lck_full_desc: "包含 LCK 所有常规赛和季后赛的赛程与比分。",
+            lck_alarm_title: "LCK 赛程 (含提醒)",
+            lck_alarm_desc: "LCK 每场比赛开始前 30 分钟发送系统通知。",
+            lpl_full_title: "LPL 赛程",
+            lpl_full_desc: "包含 LPL 所有登峰组/涅槃组和季后赛的比分与赛程。",
+            lpl_alarm_title: "LPL 赛程 (含提醒)",
+            lpl_alarm_desc: "LPL 每场比赛开始前 30 分钟发送系统通知。",
+            btn_sub: "订阅日历",
+            btn_copy: "复制链接",
+            team_section: "战队赛程",
+            team_sub: "订阅",
+            team_copy: "复制",
+            footer_src: "数据来源于 Riot Games 官方赛事平台",
+            footer_host: "托管于",
+            toast: "已复制订阅链接到剪贴板！"
+        },
+        en: {
+            badge: "Auto-updated daily via GitHub Actions",
+            title: "LOL Match Calendar",
+            subtitle: "League of Legends match schedules & scores, One-click subscribe to Apple Calendar.",
+            tab_lck: "LCK league",
+            tab_lpl: "LPL League",
+            lck_full_title: "LCK Schedule",
+            lck_full_desc: "Full LCK schedule with regular season, playoffs and scores.",
+            lck_alarm_title: "LCK Schedule(with Alarms)",
+            lck_alarm_desc: "Sends system notifications 30 minutes before each match.",
+            lpl_full_title: "LPL Schedule",
+            lpl_full_desc: "Full LPL schedule with split rounds, playoffs and scores.",
+            lpl_alarm_title: "LPL Schedule(with Alarms)",
+            lpl_alarm_desc: "Sends system notifications 30 minutes before each match.",
+            btn_sub: "Subscribe",
+            btn_copy: "Copy URL",
+            team_section: "Team Schedules",
+            team_sub: "Sub",
+            team_copy: "Copy",
+            footer_src: "Data sourced from official Riot Games esports",
+            footer_host: "Hosted on",
+            toast: "Subscription link copied to clipboard!"
+        }
+    };
+
+    const LCK_TEAMS = [
+        { code: "T1", name: "T1" },
+        { code: "GEN", name: "Gen.G" },
+        { code: "HLE", name: "Hanwha Life Esports" },
+        { code: "DK", name: "Dplus KIA" },
+        { code: "KT", name: "KT Rolster" },
+        { code: "NS", name: "Nongshim RedForce" },
+        { code: "KRX", name: "DRX" },
+        { code: "BFX", name: "BNK FearX" },
+        { code: "BRO", name: "OK BRION" },
+        { code: "DNS", name: "DN FreeCS" }
+    ];
+
+    const LPL_TEAMS = [
+        { code: "BLG", name: "Bilibili Gaming" },
+        { code: "TES", name: "Top Esports" },
+        { code: "WBG", name: "Weibo Gaming" },
+        { code: "JDG", name: "JD Gaming" },
+        { code: "AL", name: "Anyone's Legend" },
+        { code: "LNG", name: "LNG Esports" },
+        { code: "NIP", name: "Ninjas in Pyjamas" },
+        { code: "IG", name: "Invictus Gaming" },
+        { code: "EDG", name: "EDward Gaming" },
+        { code: "WE", name: "Team WE" },
+        { code: "LGD", name: "LGD Gaming" },
+        { code: "TT", name: "ThunderTalk Gaming" }
+    ];
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.textContent.includes(lang === 'zh' ? '中文' : 'English'));
+        });
+
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (I18N[lang][key]) {
+                el.textContent = I18N[lang][key];
+            }
+        });
+
+        renderTeams(LCK_TEAMS, "lck", "lck-teams");
+        renderTeams(LPL_TEAMS, "lpl", "lpl-teams");
+    }
+
+    function renderTeams(teams, league, containerId) {
+        const container = document.getElementById(containerId);
+        const subText = I18N[currentLang].team_sub;
+        const copyText = I18N[currentLang].team_copy;
+
+        container.innerHTML = teams.map(team => {
+            const icsUrl = `https://cdn.jsdelivr.net/gh/${USERNAME}/${REPO}/${league}/team/${team.code}.ics`;
+            const webcalUrl = `webcal://cdn.jsdelivr.net/gh/${USERNAME}/${REPO}/${league}/team/${team.code}.ics`;
+            return `
+                <div class="team-card">
+                    <div class="team-info">
+                        <span class="team-code">${team.code}</span>
+                        <span class="team-name">${team.name}</span>
+                    </div>
+                    <div class="btn-group">
+                        <a href="${webcalUrl}" class="btn btn-primary">${subText}</a>
+                        <button class="btn btn-secondary" onclick="copyLink('${icsUrl}')">${copyText}</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    renderTeams(LCK_TEAMS, "lck", "lck-teams");
+    renderTeams(LPL_TEAMS, "lpl", "lpl-teams");
+
+    function switchTab(league) {
+        const buttons = document.querySelectorAll('.tab-btn');
+        const panels = document.querySelectorAll('.section-panel');
+
+        buttons.forEach(btn => btn.className = 'tab-btn');
+        panels.forEach(panel => panel.classList.remove('active'));
+
+        if (league === 'lck') {
+            buttons[0].classList.add('active-lck');
+            document.getElementById('lck-panel').classList.add('active');
+        } else {
+            buttons[1].classList.add('active-lpl');
+            document.getElementById('lpl-panel').classList.add('active');
+        }
+    }
+
+    function copyLink(url) {
+        navigator.clipboard.writeText(url).then(() => {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
